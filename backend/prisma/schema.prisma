@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+}
+
+model User {
+  id             Int            @id @default(autoincrement())
+  name           String
+  email          String         @unique
+  password       String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  products       Product[]
+  categories     Category[]
+  stockMovements StockMovement[]
+}
+
+model Category {
+  id        Int       @id @default(autoincrement())
+  name      String
+  userId    Int
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  products  Product[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Product {
+  id            Int            @id @default(autoincrement())
+  name          String
+  sku           String
+  description   String?        @db.Text
+  categoryId    Int?
+  category      Category?      @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  purchasePrice Decimal        @db.Decimal(10, 2)
+  salePrice     Decimal        @db.Decimal(10, 2)
+  quantity      Int
+  minimumStock  Int            @default(0)
+  userId        Int
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  stockMovements StockMovement[]
+
+  @@unique([userId, sku])
+  @@index([userId])
+  @@index([categoryId])
+}
+
+model StockMovement {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  quantity  Int
+  createdAt DateTime @default(now())
+
+  @@index([productId])
+  @@index([userId])
+}
